@@ -3,6 +3,8 @@ from rich import print
 from typing import Optional
 from denctl import __version__
 from denctl.commands.hello import hello
+from denctl.commands import homebrew
+from denctl.commands import auth
 
 app = typer.Typer(
     name="denctl",
@@ -12,6 +14,8 @@ app = typer.Typer(
 
 # Register commands
 app.command(name="hello")(hello)
+app.add_typer(homebrew.app, name="homebrew")
+app.add_typer(auth.app, name="auth")
 
 
 def version_callback(value: bool):
