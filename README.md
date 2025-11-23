@@ -52,6 +52,34 @@ uv pip install -e .
 
 ## Usage
 
+### Homebrew Backups
+
+**denctl** provides automated backups for your Homebrew configuration to a private GitHub Gist, optionally formatted by Claude AI.
+
+#### Prerequisites
+
+*   GitHub CLI (`gh`) installed and authenticated
+*   Anthropic API Key (for AI formatting)
+
+#### Setup
+
+1.  **Authenticate Anthropic API:**
+    ```bash
+    uv run den auth anthropic
+    # Follow the prompt to enter your 'sk-...' key
+    ```
+
+2.  **Run Manual Backup:**
+    ```bash
+    uv run den homebrew backup
+    ```
+
+#### Options
+
+*   `--force`, `-f`: Force backup even if no changes are detected.
+*   `--dry-run`: Generate and format the Brewfile without uploading.
+*   `--no-format`: Skip the AI formatting step.
+
 ### Hello Command
 
 The MVP includes a simple `hello` command that greets a user:
