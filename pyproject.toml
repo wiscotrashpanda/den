@@ -6,14 +6,15 @@ readme = "README.md"
 authors = [
     { name = "Josh Butler", email = "150370099+wiscotrashpanda@users.noreply.github.com" }
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "typer>=0.20.0",
+    "rich>=13.0.0",
 ]
 
 [project.scripts]
-denctl = "denctl:main"
-den = "denctl:main"
+denctl = "denctl.main:main"
+den = "denctl.main:main"
 
 [build-system]
 requires = ["uv_build>=0.9.11,<0.10.0"]
@@ -21,6 +22,14 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "black>=25.11.0",
-    "pytest>=9.0.1",
+    "ruff>=0.3.0",
+    "mypy>=1.8.0",
+    "pytest>=8.0.0",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]  # Enable Pyflakes, pycodestyle, isort, and flake8-bugbear

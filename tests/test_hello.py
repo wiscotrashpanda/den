@@ -1,6 +1,5 @@
 from typer.testing import CliRunner
-
-from denctl import app
+from denctl.main import app
 
 runner = CliRunner()
 
@@ -38,5 +37,12 @@ def test_app_help():
     """Test main app help output."""
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "denctl - raccoon's den automation CLI" in result.output
+    assert "denctl - 🦝 automation CLI" in result.output
     assert "hello" in result.output
+
+
+def test_version():
+    """Test version flag."""
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    assert "denctl version" in result.output
