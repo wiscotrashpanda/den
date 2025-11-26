@@ -80,6 +80,20 @@ uv pip install -e .
 *   `--dry-run`: Generate and format the Brewfile without uploading.
 *   `--no-format`: Skip the AI formatting step.
 
+#### Automated Scheduling
+
+You can schedule automated daily backups using launchd:
+
+```bash
+# Install scheduled backup (runs daily at 06:00 UTC)
+uv run den homebrew schedule install
+
+# Remove scheduled backup
+uv run den homebrew schedule uninstall
+```
+
+Logs are stored in `~/Library/Logs/denctl.homebrew.log` and `~/Library/Logs/denctl.homebrew.error.log`.
+
 ### Hello Command
 
 The MVP includes a simple `hello` command that greets a user:
@@ -158,15 +172,16 @@ denctl/
 │       ├── __init__.py          # Package initialization
 │       ├── main.py              # Main CLI entry point
 │       └── commands/
-│           └── hello.py         # Hello command logic
+│           ├── __init__.py
+│           ├── auth.py          # Authentication management
+│           ├── hello.py         # Hello command logic
+│           └── homebrew.py      # Homebrew backup functionality
 ├── tests/
 │   ├── __init__.py
 │   └── test_hello.py            # Test suite
-├── .vscode/
-│   └── settings.json            # VS Code configuration
 ├── pyproject.toml               # Project configuration
 ├── uv.lock                      # Dependency lock file
-├── AGENTS.md                    # AI Agent guidelines
+├── CLAUDE.MD                    # Claude Code guidelines
 └── README.md                    # This file
 ```
 
