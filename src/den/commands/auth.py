@@ -6,7 +6,7 @@ It handles secure storage of secrets in a configuration file.
 
 Key Features:
 - Secure storage: Keys are saved with 600 file permissions.
-- Centralized config: Credential configuration is stored in ~/.config/den/config.json.
+- Centralized config: Credential configuration is stored in ~/.config/den/auth.json.
 """
 
 import json

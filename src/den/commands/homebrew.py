@@ -12,8 +12,8 @@ Key Features:
 - **State Management**: Persists the Gist ID and content hash to track state across runs.
 
 Configuration:
-- Stores state (Gist ID, Hash) in `~/.config/den/homebrew.json`.
-- Reads API keys from `~/.config/den/config.json` or environment variables.
+- Stores state (Gist ID, Hash) in `~/.config/den/config.json`.
+- Reads API keys from `~/.config/den/auth.json` or environment variables.
 """
 
 import hashlib
@@ -46,16 +46,16 @@ console = Console()
 
 # Configuration Constants
 CONFIG_DIR = Path.home() / ".config" / "den"
-CONFIG_FILE = CONFIG_DIR / "homebrew.json"
+CONFIG_FILE = CONFIG_DIR / "config.json"
 AUTH_CONFIG_FILE = CONFIG_DIR / "auth.json"
 
 
 def get_config() -> Dict[str, Any]:
     """
-    Load the Homebrew-specific configuration from the JSON file.
+    Load the Homebrew-specific configuration from the main config file.
 
-    This file stores state information like the last backup hash,
-    the Gist ID, and the last run timestamp.
+    The configuration is stored in `~/.config/den/config.json` under the "brew" key.
+    This stores state information like the last backup hash, the Gist ID, and the last run timestamp.
 
     Returns:
         Dict[str, Any]: The configuration dictionary. Returns empty dict on error.
@@ -63,7 +63,8 @@ def get_config() -> Dict[str, Any]:
     if not CONFIG_FILE.exists():
         return {}
     try:
-        return json.loads(CONFIG_FILE.read_text())
+        full_config = json.loads(CONFIG_FILE.read_text())
+        return full_config.get("brew", {})
     except json.JSONDecodeError:
         return {}
 
@@ -88,15 +89,26 @@ def get_auth_config() -> Dict[str, Any]:
 
 def save_config(config: Dict[str, Any]) -> None:
     """
-    Save the Homebrew-specific configuration to the JSON file.
+    Save the Homebrew-specific configuration to the main config file.
 
+    Updates the "brew" section in `~/.config/den/config.json`.
     Ensures directory exists and sets 600 permissions for security.
 
     Args:
         config (Dict[str, Any]): The configuration data to save.
     """
+    # Load existing full config to preserve other settings
+    full_config = {}
+    if CONFIG_FILE.exists():
+        try:
+            full_config = json.loads(CONFIG_FILE.read_text())
+        except json.JSONDecodeError:
+            pass  # Start fresh if corrupt
+
+    full_config["brew"] = config
+
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    CONFIG_FILE.write_text(json.dumps(config, indent=2))
+    CONFIG_FILE.write_text(json.dumps(full_config, indent=2))
     # Ensure privacy
     CONFIG_FILE.chmod(0o600)
 

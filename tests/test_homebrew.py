@@ -2,7 +2,6 @@
 
 import json
 import subprocess
-from pathlib import Path
 from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pytest
@@ -18,7 +17,6 @@ from den.commands.homebrew import (
     generate_brewfile,
     get_anthropic_api_key,
     get_config,
-    get_general_config,
     manage_gist,
     save_config,
 )
@@ -30,17 +28,15 @@ runner = CliRunner()
 def temp_config_dir(tmp_path, monkeypatch):
     """Create a temporary config directory for testing."""
     temp_config = tmp_path / ".config" / "den"
-    temp_config_file = temp_config / "homebrew.json"
-    temp_general_config_file = temp_config / "config.json"
+    temp_config_file = temp_config / "config.json"
+    temp_auth_config_file = temp_config / "auth.json"
 
     # Patch the module-level constants
     monkeypatch.setattr("den.commands.homebrew.CONFIG_DIR", temp_config)
     monkeypatch.setattr("den.commands.homebrew.CONFIG_FILE", temp_config_file)
-    monkeypatch.setattr(
-        "den.commands.homebrew.GENERAL_CONFIG_FILE", temp_general_config_file
-    )
+    monkeypatch.setattr("den.commands.homebrew.AUTH_CONFIG_FILE", temp_auth_config_file)
 
-    return temp_config, temp_config_file, temp_general_config_file
+    return temp_config, temp_config_file, temp_auth_config_file
 
 
 def test_get_config_no_file(temp_config_dir):
@@ -54,7 +50,8 @@ def test_get_config_valid_file(temp_config_dir):
     temp_config, temp_config_file, _ = temp_config_dir
     temp_config.mkdir(parents=True, exist_ok=True)
     test_data = {"gist_id": "abc123", "last_hash": "hash123"}
-    temp_config_file.write_text(json.dumps(test_data))
+    # Write nested structure
+    temp_config_file.write_text(json.dumps({"brew": test_data}))
 
     config = get_config()
     assert config == test_data
@@ -70,23 +67,6 @@ def test_get_config_invalid_json(temp_config_dir):
     assert config == {}
 
 
-def test_get_general_config_no_file(temp_config_dir):
-    """Test getting general config when file doesn't exist."""
-    config = get_general_config()
-    assert config == {}
-
-
-def test_get_general_config_valid_file(temp_config_dir):
-    """Test getting general config from valid JSON file."""
-    temp_config, _, temp_general_config_file = temp_config_dir
-    temp_config.mkdir(parents=True, exist_ok=True)
-    test_data = {"anthropic_api_key": "sk-test-key"}
-    temp_general_config_file.write_text(json.dumps(test_data))
-
-    config = get_general_config()
-    assert config == test_data
-
-
 def test_save_config_creates_directory(temp_config_dir):
     """Test that save_config creates directory if it doesn't exist."""
     temp_config, temp_config_file, _ = temp_config_dir
@@ -100,24 +80,24 @@ def test_save_config_creates_directory(temp_config_dir):
 
 def test_save_config_writes_json(temp_config_dir):
     """Test that save_config writes valid JSON."""
-    temp_config, temp_config_file, _ = temp_config_dir
+    _, temp_config_file, _ = temp_config_dir
     test_config = {"gist_id": "test123", "last_hash": "hash456"}
 
     save_config(test_config)
 
     saved_data = json.loads(temp_config_file.read_text())
-    assert saved_data == test_config
+    assert saved_data["brew"] == test_config
 
 
 def test_save_config_sets_permissions(temp_config_dir):
     """Test that save_config sets 600 permissions."""
-    temp_config, temp_config_file, _ = temp_config_dir
+    _, temp_config_file, _ = temp_config_dir
     test_config = {"gist_id": "test123"}
 
     save_config(test_config)
 
     # Check permissions are 600 (owner read/write only)
-    assert oct(temp_config_file.stat().st_mode)[-3:] == "600"
+    assert oct(temp_config_file.stat().st_mode).endswith("600")
 
 
 def test_calculate_hash():
@@ -139,45 +119,49 @@ def test_get_anthropic_api_key_from_env(temp_config_dir, monkeypatch):
     test_key = "sk-env-test-key"
     monkeypatch.setenv("ANTHROPIC_API_KEY", test_key)
 
-    key = get_anthropic_api_key()
+    key, source = get_anthropic_api_key()
     assert key == test_key
+    assert "environment variable" in source
 
 
 def test_get_anthropic_api_key_from_config(temp_config_dir, monkeypatch):
     """Test getting API key from config file."""
-    temp_config, _, temp_general_config_file = temp_config_dir
+    temp_config, _, temp_auth_config_file = temp_config_dir
     temp_config.mkdir(parents=True, exist_ok=True)
     test_key = "sk-config-test-key"
-    temp_general_config_file.write_text(json.dumps({"anthropic_api_key": test_key}))
+    temp_auth_config_file.write_text(json.dumps({"anthropic_api_key": test_key}))
 
     # Make sure env var is not set
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
-    key = get_anthropic_api_key()
+    key, source = get_anthropic_api_key()
     assert key == test_key
+    assert "auth file" in source
 
 
 def test_get_anthropic_api_key_env_priority(temp_config_dir, monkeypatch):
     """Test that environment variable takes priority over config file."""
-    temp_config, _, temp_general_config_file = temp_config_dir
+    temp_config, _, temp_auth_config_file = temp_config_dir
     temp_config.mkdir(parents=True, exist_ok=True)
 
     env_key = "sk-env-key"
     config_key = "sk-config-key"
 
     monkeypatch.setenv("ANTHROPIC_API_KEY", env_key)
-    temp_general_config_file.write_text(json.dumps({"anthropic_api_key": config_key}))
+    temp_auth_config_file.write_text(json.dumps({"anthropic_api_key": config_key}))
 
-    key = get_anthropic_api_key()
+    key, source = get_anthropic_api_key()
     assert key == env_key
+    assert "environment variable" in source
 
 
 def test_get_anthropic_api_key_none(temp_config_dir, monkeypatch):
     """Test getting API key when none is configured."""
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
-    key = get_anthropic_api_key()
+    key, source = get_anthropic_api_key()
     assert key is None
+    assert source is None
 
 
 @patch("den.commands.homebrew.subprocess.run")
@@ -255,7 +239,7 @@ def test_format_with_claude_success(mock_anthropic_class):
     mock_client.messages.create.return_value = mock_message
 
     original_content = "brew 'git'"
-    result = format_with_claude(original_content, "sk-test-key")
+    result = format_with_claude(original_content, "sk-test-key", "test_source")
 
     assert result == "# Formatted Brewfile\nbrew 'git'"
     mock_client.messages.create.assert_called_once()
@@ -272,7 +256,7 @@ def test_format_with_claude_api_error(mock_anthropic_class):
     )
 
     original_content = "brew 'git'"
-    result = format_with_claude(original_content, "sk-test-key")
+    result = format_with_claude(original_content, "sk-test-key", "test_source")
 
     # Should return original content on error
     assert result == original_content
@@ -286,7 +270,7 @@ def test_format_with_claude_exception(mock_anthropic_class):
     mock_client.messages.create.side_effect = Exception("Network error")
 
     original_content = "brew 'git'"
-    result = format_with_claude(original_content, "sk-test-key")
+    result = format_with_claude(original_content, "sk-test-key", "test_source")
 
     # Should return original content on error
     assert result == original_content
@@ -354,7 +338,7 @@ def test_backup_no_changes(
 
     # Set up existing config with same hash
     temp_config.mkdir(parents=True, exist_ok=True)
-    temp_config_file.write_text(json.dumps({"last_hash": content_hash}))
+    temp_config_file.write_text(json.dumps({"brew": {"last_hash": content_hash}}))
 
     mock_generate.return_value = brewfile_content
 
@@ -381,10 +365,10 @@ def test_backup_force_flag(
 
     # Set up existing config with same hash
     temp_config.mkdir(parents=True, exist_ok=True)
-    temp_config_file.write_text(json.dumps({"last_hash": content_hash}))
+    temp_config_file.write_text(json.dumps({"brew": {"last_hash": content_hash}}))
 
     mock_generate.return_value = brewfile_content
-    mock_get_api_key.return_value = None  # No API key
+    mock_get_api_key.return_value = (None, None)  # No API key
     mock_manage_gist.return_value = gist_id
 
     result = runner.invoke(app, ["backup", "--force"])
@@ -402,7 +386,7 @@ def test_backup_dry_run(
 ):
     """Test backup with dry-run flag."""
     mock_generate.return_value = "brew 'git'\nbrew 'python'"
-    mock_get_api_key.return_value = None
+    mock_get_api_key.return_value = (None, None)
 
     result = runner.invoke(app, ["backup", "--dry-run"])
 
@@ -430,7 +414,7 @@ def test_backup_with_formatting(
     gist_id = "test_gist_456"
 
     mock_generate.return_value = brewfile_content
-    mock_get_api_key.return_value = "sk-test-key"
+    mock_get_api_key.return_value = ("sk-test-key", "test_source")
     mock_format.return_value = formatted_content
     mock_manage_gist.return_value = gist_id
 
@@ -438,7 +422,7 @@ def test_backup_with_formatting(
 
     assert result.exit_code == 0
     assert "Success" in result.output
-    mock_format.assert_called_once_with(brewfile_content, "sk-test-key")
+    mock_format.assert_called_once_with(brewfile_content, "sk-test-key", "test_source")
     mock_manage_gist.assert_called_once_with(formatted_content, ANY)
 
 
@@ -454,7 +438,7 @@ def test_backup_no_format_flag(
     gist_id = "test_gist_789"
 
     mock_generate.return_value = brewfile_content
-    mock_get_api_key.return_value = "sk-test-key"
+    mock_get_api_key.return_value = ("sk-test-key", "test_source")
     mock_manage_gist.return_value = gist_id
 
     result = runner.invoke(app, ["backup", "--no-format"])
