@@ -267,7 +267,9 @@ def test_format_with_claude_api_error(mock_anthropic_class):
     mock_client = MagicMock()
     mock_anthropic_class.return_value = mock_client
     mock_request = MagicMock()
-    mock_client.messages.create.side_effect = APIError("API Error", request=mock_request, body=None)
+    mock_client.messages.create.side_effect = APIError(
+        "API Error", request=mock_request, body=None
+    )
 
     original_content = "brew 'git'"
     result = format_with_claude(original_content, "sk-test-key")

@@ -17,7 +17,7 @@ def test_app_no_args_shows_help():
     assert result.exit_code in [0, 2]  # Typer returns 2 when no_args_is_help triggers
     assert "den - 🦝 automation CLI" in result.output
     assert "hello" in result.output
-    assert "homebrew" in result.output
+    assert "brew" in result.output
     assert "auth" in result.output
 
 
@@ -71,7 +71,7 @@ def test_hello_command_with_arg():
 
 def test_homebrew_command_group_registered():
     """Test that homebrew command group is registered."""
-    result = runner.invoke(app, ["homebrew", "--help"])
+    result = runner.invoke(app, ["brew", "--help"])
     assert result.exit_code == 0
     assert "Manage Homebrew backups" in result.output
     assert "backup" in result.output
@@ -107,7 +107,7 @@ def test_all_commands_have_help():
     assert "Say hello" in result.output or "NAME" in result.output
 
     # Test homebrew
-    result = runner.invoke(app, ["homebrew", "--help"])
+    result = runner.invoke(app, ["brew", "--help"])
     assert result.exit_code == 0
     assert "backup" in result.output
 

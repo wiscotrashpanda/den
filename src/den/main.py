@@ -38,8 +38,8 @@ app = typer.Typer(
 app.command(name="hello")(hello)
 
 # Register the 'homebrew' command group
-# This adds all commands defined in the homebrew module under the 'homebrew' subcommand.
-app.add_typer(homebrew.app, name="homebrew")
+# This adds all commands defined in the homebrew module under the 'brew' subcommand.
+app.add_typer(homebrew.app, name="brew")
 
 # Register the 'auth' command group
 # This adds all commands defined in the auth module under the 'auth' subcommand.

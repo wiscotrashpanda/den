@@ -19,9 +19,7 @@ Configuration:
 import hashlib
 import json
 import os
-import plistlib
 import subprocess
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -32,20 +30,24 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 # Initialize the homebrew sub-application
-app = typer.Typer(name="homebrew", help="Manage Homebrew backups and configuration.")
-schedule_app = typer.Typer(name="schedule", help="Manage automated backup schedule.")
-app.add_typer(schedule_app, name="schedule")
+# Initialize the homebrew sub-application
+app = typer.Typer(name="brew", help="Manage Homebrew backups and configuration.")
+
+
+@app.callback()
+def callback():
+    """
+    Manage Homebrew backups and configuration.
+    """
+    pass
+
 
 console = Console()
 
 # Configuration Constants
 CONFIG_DIR = Path.home() / ".config" / "den"
 CONFIG_FILE = CONFIG_DIR / "homebrew.json"
-GENERAL_CONFIG_FILE = CONFIG_DIR / "config.json"
-
-# Scheduling Constants
-PLIST_LABEL = "com.emkaytec.den.homebrew.plist"
-PLIST_PATH = Path.home() / "Library" / "LaunchAgents" / PLIST_LABEL
+AUTH_CONFIG_FILE = CONFIG_DIR / "auth.json"
 
 
 def get_config() -> Dict[str, Any]:
@@ -66,9 +68,9 @@ def get_config() -> Dict[str, Any]:
         return {}
 
 
-def get_general_config() -> Dict[str, Any]:
+def get_auth_config() -> Dict[str, Any]:
     """
-    Load the general application configuration.
+    Load the authentication configuration.
 
     This file is used to retrieve shared secrets, specifically the
     Anthropic API key.
@@ -76,10 +78,10 @@ def get_general_config() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: The configuration dictionary. Returns empty dict on error.
     """
-    if not GENERAL_CONFIG_FILE.exists():
+    if not AUTH_CONFIG_FILE.exists():
         return {}
     try:
-        return json.loads(GENERAL_CONFIG_FILE.read_text())
+        return json.loads(AUTH_CONFIG_FILE.read_text())
     except json.JSONDecodeError:
         return {}
 
@@ -169,32 +171,33 @@ def calculate_hash(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
-def get_anthropic_api_key() -> Optional[str]:
+def get_anthropic_api_key() -> tuple[Optional[str], Optional[str]]:
     """
-    Retrieve Anthropic API key from Environment or General Configuration.
+    Retrieve Anthropic API key from Environment or Auth Configuration.
 
     Priority:
     1. Environment Variable (`ANTHROPIC_API_KEY`)
-    2. Config File (`~/.config/den/config.json`)
+    2. Auth Config File (`~/.config/den/auth.json`)
 
     Returns:
-        Optional[str]: The API key if found, else None.
+        tuple[Optional[str], Optional[str]]: A tuple containing (api_key, source).
+                                           Source is 'env' or 'config'.
     """
     # 1. Environment Variable
     env_key = os.environ.get("ANTHROPIC_API_KEY")
     if env_key:
-        return env_key
+        return env_key, "environment variable 'ANTHROPIC_API_KEY'"
 
-    # 2. General Config File
-    config = get_general_config()
+    # 2. Auth Config File
+    config = get_auth_config()
     config_key = config.get("anthropic_api_key")
     if config_key:
-        return config_key
+        return config_key, f"auth file '{AUTH_CONFIG_FILE}'"
 
-    return None
+    return None, None
 
 
-def format_with_claude(content: str, api_key: str) -> str:
+def format_with_claude(content: str, api_key: str, source: str) -> str:
     """
     Use the Anthropic API (Claude) to format and document the Brewfile.
 
@@ -207,6 +210,7 @@ def format_with_claude(content: str, api_key: str) -> str:
     Args:
         content (str): The raw Brewfile content.
         api_key (str): The Anthropic API key.
+        source (str): The source of the API key for debugging.
 
     Returns:
         str: The formatted Brewfile content, or the original content if the API call fails.
@@ -246,8 +250,13 @@ def format_with_claude(content: str, api_key: str) -> str:
         return content
 
     except APIError as e:
+        masked_key = (
+            f"{api_key[:4]}...{api_key[-4:]}" if len(api_key) > 8 else "INVALID"
+        )
         console.print(
-            f"[bold yellow]Warning:[/bold yellow] Claude API error: {e}. "
+            f"[bold yellow]Warning:[/bold yellow] Claude API error: {e}.\n"
+            f"Key Source: {source}\n"
+            f"Key (masked): {masked_key}\n"
             "Using unformatted content."
         )
         return content
@@ -387,10 +396,10 @@ def backup(
         final_content = raw_content
 
         # Step 3: Format with Claude
-        api_key = get_anthropic_api_key()
-        if not no_format and api_key:
+        api_key, source = get_anthropic_api_key()
+        if not no_format and api_key and source:
             progress.add_task(description="Formatting with Claude AI...", total=None)
-            final_content = format_with_claude(raw_content, api_key)
+            final_content = format_with_claude(raw_content, api_key, source)
         elif not no_format and not api_key:
             console.print(
                 "[yellow]Warning:[/yellow] ANTHROPIC_API_KEY not found. "
@@ -426,118 +435,3 @@ def backup(
     console.print(
         f"[bold green]Success![/bold green] Backup complete. Gist ID: {gist_id}"
     )
-
-
-@schedule_app.command("install")
-def schedule_install():
-    """
-    Install the launchd agent to run 'den homebrew backup' daily at 06:00 UTC.
-
-    This command:
-    1. Calculates the local time corresponding to 06:00 UTC.
-    2. Generates a launchd plist file.
-    3. Loads the agent using launchctl.
-    """
-    # Calculate local time for 06:00 UTC
-    # TODO: Add CLI option to specify custom schedule time (default: 06:00 UTC)
-    utc_target = datetime.now(timezone.utc).replace(
-        hour=6, minute=0, second=0, microsecond=0
-    )
-    local_target = utc_target.astimezone()
-
-    console.print(
-        f"Scheduling backup for 06:00 UTC (approx. {local_target.strftime('%H:%M')} local time)."
-    )
-
-    # Determine the executable path
-    # We use sys.executable to find the python interpreter, but we want the 'den' script
-    # equivalent if possible, or run module.
-    # However, 'den' is likely an entry point script.
-    # Safest way in a 'uv' or 'venv' environment is to use the absolute path to the executable script.
-    executable = sys.argv[0]
-    if not os.path.isabs(executable):
-        executable = os.path.abspath(executable)
-
-    # If run via 'uv run', sys.argv[0] might be different.
-    # But typically sys.argv[0] is the script path.
-    # Let's verify if it's python or the script.
-    # If it ends in 'den', we are good. If it is 'python', we need the module args.
-    # A robust way for a CLI installed via pip/uv is to assume 'den' is on the path or use the full path.
-
-    # Let's construct the command arguments
-    program_args = [executable, "homebrew", "backup"]
-
-    plist_content = {
-        "Label": PLIST_LABEL,
-        "ProgramArguments": program_args,
-        "StartCalendarInterval": {
-            "Hour": local_target.hour,
-            "Minute": local_target.minute,
-        },
-        "StandardOutPath": str(Path.home() / "Library/Logs/den.homebrew.log"),
-        "StandardErrorPath": str(Path.home() / "Library/Logs/den.homebrew.error.log"),
-        "RunAtLoad": False,
-    }
-
-    try:
-        PLIST_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(PLIST_PATH, "wb") as f:
-            plistlib.dump(plist_content, f)
-
-        console.print(f"[green]✓[/green] Created plist at {PLIST_PATH}")
-
-        # Unload if exists first to ensure clean reload
-        subprocess.run(
-            ["launchctl", "bootout", f"gui/{os.getuid()}/{PLIST_LABEL}"],
-            capture_output=True,
-        )
-
-        # Load the agent
-        # launchctl bootstrap gui/<uid> <path>
-        result = subprocess.run(
-            ["launchctl", "bootstrap", f"gui/{os.getuid()}", str(PLIST_PATH)],
-            capture_output=True,
-            text=True,
-        )
-
-        if result.returncode == 0:
-            console.print("[bold green]Success![/bold green] Backup scheduled.")
-        else:
-            console.print(f"[bold red]Error loading agent:[/bold red] {result.stderr}")
-            # Cleanup if failed
-            if PLIST_PATH.exists():
-                PLIST_PATH.unlink()
-            raise typer.Exit(code=1)
-
-    except Exception as e:
-        console.print(f"[bold red]Error installing schedule:[/bold red] {e}")
-        raise typer.Exit(code=1)
-
-
-@schedule_app.command("uninstall")
-def schedule_uninstall():
-    """
-    Remove the scheduled backup agent.
-
-    This command:
-    1. Unloads the agent using launchctl.
-    2. Deletes the plist file.
-    """
-    if not PLIST_PATH.exists():
-        console.print("[yellow]No schedule found.[/yellow]")
-        return
-
-    try:
-        # Unload
-        subprocess.run(
-            ["launchctl", "bootout", f"gui/{os.getuid()}/{PLIST_LABEL}"],
-            capture_output=True,
-        )
-
-        # Remove file
-        PLIST_PATH.unlink()
-        console.print("[bold green]Success![/bold green] Schedule removed.")
-
-    except Exception as e:
-        console.print(f"[bold red]Error removing schedule:[/bold red] {e}")
-        raise typer.Exit(code=1)

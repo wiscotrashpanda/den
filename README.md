@@ -15,7 +15,6 @@
 - Code linting and formatting with Ruff
 - Static type checking with MyPy
 
-
 ## Installation
 
 ### Prerequisites
@@ -47,6 +46,29 @@ uv pip install -e .
 .venv/bin/den hello
 ```
 
+### Install as Standalone Binary (External Drive)
+
+If you are running this from an external drive or want a single portable executable:
+
+1.  **Build the binary:**
+
+    ```bash
+    ./build_binary.sh
+    ```
+
+2.  **Link to PATH:**
+    To make `den` available globally without copying it (useful if you want to update it by just rebuilding):
+
+    ```bash
+    sudo ln -sf "$(pwd)/dist/den" /usr/local/bin/den
+    ```
+
+3.  **Copy to PATH:**
+    If you plan to unplug the external drive but still want to use the tool:
+    ```bash
+    sudo cp "dist/den" /usr/local/bin/den
+    ```
+
 ## Usage
 
 ### Homebrew Backups
@@ -55,12 +77,13 @@ uv pip install -e .
 
 #### Prerequisites
 
-*   GitHub CLI (`gh`) installed and authenticated
-*   Anthropic API Key (for AI formatting)
+- GitHub CLI (`gh`) installed and authenticated
+- Anthropic API Key (for AI formatting)
 
 #### Setup
 
 1.  **Authenticate Anthropic API:**
+
     ```bash
     uv run den auth anthropic
     # Follow the prompt to enter your 'sk-...' key
@@ -73,9 +96,9 @@ uv pip install -e .
 
 #### Options
 
-*   `--force`, `-f`: Force backup even if no changes are detected.
-*   `--dry-run`: Generate and format the Brewfile without uploading.
-*   `--no-format`: Skip the AI formatting step.
+- `--force`, `-f`: Force backup even if no changes are detected.
+- `--dry-run`: Generate and format the Brewfile without uploading.
+- `--no-format`: Skip the AI formatting step.
 
 #### Automated Scheduling
 
