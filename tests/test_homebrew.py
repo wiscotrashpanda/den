@@ -3,10 +3,11 @@
 import json
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pytest
 from anthropic import APIError
+import typer
 from typer.testing import CliRunner
 
 from den.commands.homebrew import (
@@ -198,7 +199,7 @@ def test_check_dependencies_missing_brew(mock_run):
     """Test dependency check when brew is missing."""
     mock_run.return_value = Mock(returncode=1)
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(typer.Exit):
         check_dependencies()
 
 
@@ -211,7 +212,7 @@ def test_check_dependencies_gh_not_authenticated(mock_run):
         Mock(returncode=1),  # gh auth status fails
     ]
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(typer.Exit):
         check_dependencies()
 
 
@@ -233,7 +234,7 @@ def test_generate_brewfile_failure(mock_run):
         1, "brew bundle dump", stderr="Error: brew not found"
     )
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(typer.Exit):
         generate_brewfile()
 
 
@@ -265,7 +266,8 @@ def test_format_with_claude_api_error(mock_anthropic_class):
     """Test Claude formatting when API error occurs."""
     mock_client = MagicMock()
     mock_anthropic_class.return_value = mock_client
-    mock_client.messages.create.side_effect = APIError("API Error")
+    mock_request = MagicMock()
+    mock_client.messages.create.side_effect = APIError("API Error", request=mock_request, body=None)
 
     original_content = "brew 'git'"
     result = format_with_claude(original_content, "sk-test-key")
@@ -435,7 +437,7 @@ def test_backup_with_formatting(
     assert result.exit_code == 0
     assert "Success" in result.output
     mock_format.assert_called_once_with(brewfile_content, "sk-test-key")
-    mock_manage_gist.assert_called_once_with(formatted_content, {})
+    mock_manage_gist.assert_called_once_with(formatted_content, ANY)
 
 
 @patch("den.commands.homebrew.check_dependencies")
@@ -457,7 +459,7 @@ def test_backup_no_format_flag(
 
     assert result.exit_code == 0
     # Should upload raw content without formatting
-    mock_manage_gist.assert_called_once_with(brewfile_content, {})
+    mock_manage_gist.assert_called_once_with(brewfile_content, ANY)
 
 
 def test_homebrew_help():

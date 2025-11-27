@@ -103,14 +103,14 @@ def test_save_general_config_sets_permissions(temp_config_dir):
 
 def test_anthropic_command_valid_key(temp_config_dir):
     """Test anthropic command with valid API key."""
-    result = runner.invoke(app, ["anthropic"], input="sk-ant-test-key\n")
+    result = runner.invoke(app, [], input="sk-ant-test-key\n")
     assert result.exit_code == 0
     assert "API Key saved" in result.output
 
 
 def test_anthropic_command_invalid_key_warning(temp_config_dir):
     """Test anthropic command with key not starting with 'sk-'."""
-    result = runner.invoke(app, ["anthropic"], input="invalid-key\n")
+    result = runner.invoke(app, [], input="invalid-key\n")
     assert result.exit_code == 0
     assert "Warning" in result.output
     assert "does not start with 'sk-'" in result.output
@@ -121,7 +121,7 @@ def test_anthropic_command_saves_key(temp_config_dir):
     temp_config, temp_config_file = temp_config_dir
     test_key = "sk-ant-test-12345"
 
-    result = runner.invoke(app, ["anthropic"], input=f"{test_key}\n")
+    result = runner.invoke(app, [], input=f"{test_key}\n")
 
     assert result.exit_code == 0
     saved_config = json.loads(temp_config_file.read_text())
@@ -139,7 +139,7 @@ def test_anthropic_command_overwrites_existing_key(temp_config_dir):
 
     # Update key
     new_key = "sk-new-key"
-    result = runner.invoke(app, ["anthropic"], input=f"{new_key}\n")
+    result = runner.invoke(app, [], input=f"{new_key}\n")
 
     assert result.exit_code == 0
     saved_config = json.loads(temp_config_file.read_text())
@@ -151,11 +151,11 @@ def test_auth_help():
     """Test auth command help output."""
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "Manage authentication credentials" in result.output
+    assert "Anthropic API" in result.output
 
 
 def test_anthropic_help():
     """Test anthropic subcommand help output."""
-    result = runner.invoke(app, ["anthropic", "--help"])
+    result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "Anthropic API Key" in result.output
+    assert "Anthropic API" in result.output

@@ -1,5 +1,6 @@
 """Tests for the main application entry point."""
 
+import typer
 from unittest.mock import patch
 
 import pytest
@@ -13,7 +14,7 @@ runner = CliRunner()
 def test_app_no_args_shows_help():
     """Test that running with no args shows help due to no_args_is_help=True."""
     result = runner.invoke(app, [])
-    assert result.exit_code == 0
+    assert result.exit_code in [0, 2]  # Typer returns 2 when no_args_is_help triggers
     assert "den - 🦝 automation CLI" in result.output
     assert "hello" in result.output
     assert "homebrew" in result.output
@@ -44,7 +45,7 @@ def test_app_version_short_flag():
 
 def test_version_callback_exits():
     """Test that version_callback raises Exit when value is True."""
-    with pytest.raises(SystemExit):
+    with pytest.raises(typer.Exit):
         version_callback(True)
 
 
