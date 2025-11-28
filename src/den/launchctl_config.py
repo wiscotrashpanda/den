@@ -22,9 +22,9 @@ def get_config_file_path() -> Path:
 def get_domain() -> str:
     """Read domain from ~/.config/den/config.json or return default.
 
-    Reads the 'domain' key from the configuration file. If the file
-    does not exist, contains invalid JSON, or lacks a domain key,
-    returns the default domain 'com.example'.
+    Reads the domain from the nested structure: {"launchctl": {"domain": "..."}}.
+    If the file does not exist, contains invalid JSON, or lacks the nested
+    launchctl.domain key, returns the default domain 'com.example'.
 
     Returns:
         The configured domain string, or 'com.example' if not configured.
@@ -43,4 +43,7 @@ def get_domain() -> str:
     except (json.JSONDecodeError, OSError):
         return DEFAULT_DOMAIN
 
-    return config.get("domain", DEFAULT_DOMAIN)
+    launchctl_config = config.get("launchctl", {})
+    if not isinstance(launchctl_config, dict):
+        return DEFAULT_DOMAIN
+    return launchctl_config.get("domain", DEFAULT_DOMAIN)

@@ -64,7 +64,7 @@ def test_get_domain_returns_configured_value():
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         config_file = Path(tmpdir) / "config.json"
-        config_file.write_text(json.dumps({"domain": "com.mycompany"}))
+        config_file.write_text(json.dumps({"launchctl": {"domain": "com.mycompany"}}))
 
         with patch(
             "den.launchctl_config.get_config_file_path", return_value=config_file
@@ -97,6 +97,38 @@ def test_get_domain_returns_default_when_domain_key_missing():
     with tempfile.TemporaryDirectory() as tmpdir:
         config_file = Path(tmpdir) / "config.json"
         config_file.write_text(json.dumps({"other_key": "value"}))
+
+        with patch(
+            "den.launchctl_config.get_config_file_path", return_value=config_file
+        ):
+            result = get_domain()
+            assert result == DEFAULT_DOMAIN
+
+
+def test_get_domain_returns_default_when_launchctl_key_missing():
+    """Test that get_domain returns default when launchctl key is absent.
+
+    _Requirements: 2.3_
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = Path(tmpdir) / "config.json"
+        config_file.write_text(json.dumps({"launchctl": {"other": "value"}}))
+
+        with patch(
+            "den.launchctl_config.get_config_file_path", return_value=config_file
+        ):
+            result = get_domain()
+            assert result == DEFAULT_DOMAIN
+
+
+def test_get_domain_returns_default_when_launchctl_not_dict():
+    """Test that get_domain returns default when launchctl is not a dict.
+
+    _Requirements: 2.3_
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = Path(tmpdir) / "config.json"
+        config_file.write_text(json.dumps({"launchctl": "not a dict"}))
 
         with patch(
             "den.launchctl_config.get_config_file_path", return_value=config_file
