@@ -32,6 +32,11 @@ PROVIDERS: dict[str, Provider] = {
         key_name="anthropic_api_key",
         prompt_text="Enter your Anthropic API key",
     ),
+    "GitHub": Provider(
+        name="GitHub",
+        key_name="github_token",
+        prompt_text="Enter your GitHub personal access token",
+    ),
 }
 
 

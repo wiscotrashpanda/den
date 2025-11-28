@@ -36,7 +36,7 @@
     - Commit implementation and tests
     - Push to remote repository
 
-- [-] 4. Implement brew logger module
+- [x] 4. Implement brew logger module
   - [x] 4.1 Create `src/den/brew_logger.py` with logging configuration
     - Implement `get_log_file_path()` returning `~/.config/den/logs/brew-upgrade.log`
     - Implement `setup_brew_logger()` to configure file handler with timestamp and level format
@@ -45,64 +45,64 @@
   - [x] 4.2 Write property test for log entry format
     - **Property 4: Log entry format compliance**
     - **Validates: Requirements 6.3, 6.4**
-  - [-] 4.3 Git commit and push brew logger module
+  - [x] 4.3 Git commit and push brew logger module
     - Commit implementation and tests
     - Push to remote repository
 
-- [ ] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement brew runner module
-  - [ ] 6.1 Create `src/den/brew_runner.py` with Homebrew command execution
+- [x] 6. Implement brew runner module
+  - [x] 6.1 Create `src/den/brew_runner.py` with Homebrew command execution
     - Implement `run_brew_upgrade()` to execute `brew upgrade`
     - Implement `generate_brewfile()` to execute `brew bundle dump --force --stdout`
     - Handle subprocess errors and return appropriate exceptions
     - _Requirements: 1.1, 1.4, 2.1_
-  - [ ] 6.2 Write unit tests for brew runner
+  - [x] 6.2 Write unit tests for brew runner
     - Test successful command execution (mocked)
     - Test error handling for failed commands
     - _Requirements: 1.1, 1.4, 2.1_
-  - [ ] 6.3 Git commit and push brew runner module
+  - [x] 6.3 Git commit and push brew runner module
     - Commit implementation and tests
     - Push to remote repository
 
-- [ ] 7. Implement GitHub Gist client module
-  - [ ] 7.1 Create `src/den/gist_client.py` with Gist API operations
+- [x] 7. Implement GitHub Gist client module
+  - [x] 7.1 Create `src/den/gist_client.py` with Gist API operations
     - Implement `create_gist()` to create new Gist, returning (gist_id, gist_url)
     - Implement `update_gist()` to update existing Gist, returning gist_url
     - Use httpx for HTTP requests to GitHub API
     - Handle API errors with descriptive exceptions
     - _Requirements: 4.1, 4.2, 4.5, 4.7_
-  - [ ] 7.2 Write unit tests for Gist client
+  - [x] 7.2 Write unit tests for Gist client
     - Test Gist creation (mocked API)
     - Test Gist update (mocked API)
     - Test error handling for API failures
     - _Requirements: 4.1, 4.2, 4.7_
-  - [ ] 7.3 Git commit and push Gist client module
+  - [x] 7.3 Git commit and push Gist client module
     - Commit implementation and tests
     - Push to remote repository
 
-- [ ] 8. Implement Brewfile formatter module
-  - [ ] 8.1 Create `src/den/brewfile_formatter.py` with Anthropic integration
+- [x] 8. Implement Brewfile formatter module
+  - [x] 8.1 Create `src/den/brewfile_formatter.py` with Anthropic integration
     - Implement `build_formatting_prompt()` to construct the prompt
     - Implement `format_brewfile()` to call Anthropic API and return formatted content
     - Include instructions for header, descriptions, and categorization in prompt
     - Handle API errors with descriptive exceptions
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.7_
-  - [ ] 8.2 Write unit tests for Brewfile formatter
+  - [x] 8.2 Write unit tests for Brewfile formatter
     - Test prompt construction includes required instructions
     - Test API call handling (mocked)
     - Test error handling for API failures
     - _Requirements: 3.1, 3.3, 3.4, 3.5, 3.7_
-  - [ ] 8.3 Git commit and push Brewfile formatter module
+  - [x] 8.3 Git commit and push Brewfile formatter module
     - Commit implementation and tests
     - Push to remote repository
 
-- [ ] 9. Checkpoint - Ensure all tests pass
+- [x] 9. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Implement brew upgrade command
-  - [ ] 10.1 Create `src/den/commands/brew.py` with upgrade command
+- [x] 10. Implement brew upgrade command
+  - [x] 10.1 Create `src/den/commands/brew.py` with upgrade command
     - Create `brew_app` Typer group
     - Implement `upgrade()` command orchestrating the full workflow
     - Display progress messages for each step
@@ -110,24 +110,24 @@
     - Load API keys from auth storage
     - Handle missing credentials with helpful error messages
     - _Requirements: 1.2, 1.3, 2.2, 2.4, 2.5, 3.2, 3.6, 4.3, 4.4, 4.6, 7.1, 7.2, 7.3_
-  - [ ] 10.2 Register brew command in main.py
+  - [x] 10.2 Register brew command in main.py
     - Import and add `brew_app` to main application
     - _Requirements: 1.1_
-  - [ ] 10.3 Write integration tests for brew upgrade command
+  - [x] 10.3 Write integration tests for brew upgrade command
     - Test full workflow with mocked external services
     - Test skip behavior when Brewfile unchanged
     - Test error handling for missing credentials
     - _Requirements: 1.2, 2.4, 3.6, 4.6_
-  - [ ] 10.4 Git commit and push brew upgrade command
+  - [x] 10.4 Git commit and push brew upgrade command
     - Commit implementation and tests
     - Push to remote repository
 
-- [ ] 11. Add GitHub provider to auth login
-  - [ ] 11.1 Update `src/den/commands/auth.py` to include GitHub provider
+- [-] 11. Add GitHub provider to auth login
+  - [x] 11.1 Update `src/den/commands/auth.py` to include GitHub provider
     - Add GitHub provider to PROVIDERS dictionary
     - Use key name "github_token" for storage
     - _Requirements: 4.6_
-  - [ ] 11.2 Git commit and push GitHub provider update
+  - [-] 11.2 Git commit and push GitHub provider update
     - Commit changes to auth.py
     - Push to remote repository
 
