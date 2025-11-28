@@ -5,6 +5,7 @@ A CLI utility for local machine automations, built with Python and Typer.
 ## Features
 
 - **Homebrew Management**: Upgrade packages and automatically backup your Brewfile to GitHub Gist
+- **LaunchAgent Management**: Create and manage macOS LaunchAgents through an interactive CLI
 - **AI-Powered Formatting**: Uses Anthropic's Claude to format and organize your Brewfile
 - **Secure Credential Storage**: Safely store API keys for Anthropic and GitHub
 - **Change Detection**: Only backs up when your Brewfile changes (with force override option)
@@ -95,6 +96,40 @@ The `brew upgrade` command:
 
 Logs are written to `~/.local/share/den/logs/brew.log`.
 
+### LaunchAgent Management
+
+Create and manage macOS LaunchAgents through an interactive CLI:
+
+```bash
+# Install a new LaunchAgent
+den launchctl install
+
+# Uninstall an existing LaunchAgent
+den launchctl uninstall
+```
+
+The `launchctl install` command interactively prompts for:
+- Task name (alphanumeric with hyphens/underscores)
+- Command to execute
+- Schedule type (interval or calendar-based)
+- Interval seconds or specific hour/minute for daily execution
+
+LaunchAgents are created in `~/Library/LaunchAgents/` with the configured domain prefix.
+
+#### Configuration
+
+Set your domain in `~/.config/den/config.json`:
+
+```json
+{
+  "launchctl": {
+    "domain": "com.yourdomain"
+  }
+}
+```
+
+Default domain is `com.example` if not configured.
+
 ### Hello Command
 
 A simple greeting command:
@@ -118,6 +153,7 @@ den --help
 # Show command-specific help
 den auth --help
 den brew --help
+den launchctl --help
 
 # Show version
 den --version
@@ -162,18 +198,24 @@ uv run pytest
 den/
 ├── src/den/
 │   ├── __init__.py
-│   ├── main.py              # CLI entry point
-│   ├── auth_storage.py      # Credential management
-│   ├── brew_logger.py       # Logging setup
-│   ├── brew_runner.py       # Homebrew command execution
-│   ├── brewfile_formatter.py # AI-powered formatting
-│   ├── gist_client.py       # GitHub Gist API client
-│   ├── hash_utils.py        # Content hashing
-│   ├── state_storage.py     # State persistence
+│   ├── main.py                # CLI entry point
+│   ├── auth_storage.py        # Credential management
+│   ├── brew_logger.py         # Logging setup
+│   ├── brew_runner.py         # Homebrew command execution
+│   ├── brewfile_formatter.py  # AI-powered formatting
+│   ├── gist_client.py         # GitHub Gist API client
+│   ├── hash_utils.py          # Content hashing
+│   ├── state_storage.py       # State persistence
+│   ├── launchctl_config.py    # LaunchAgent domain config
+│   ├── launchctl_runner.py    # launchctl command execution
+│   ├── launchctl_validator.py # Input validation
+│   ├── plist_generator.py     # Plist file generation
+│   ├── plist_scanner.py       # LaunchAgent discovery
 │   └── commands/
-│       ├── auth.py          # Auth commands
-│       ├── brew.py          # Brew commands
-│       └── hello.py         # Hello command
+│       ├── auth.py            # Auth commands
+│       ├── brew.py            # Brew commands
+│       ├── hello.py           # Hello command
+│       └── launchctl.py       # LaunchAgent commands
 ├── tests/
 ├── pyproject.toml
 └── README.md
