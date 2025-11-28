@@ -6,6 +6,7 @@ This module initializes the Typer application and registers all commands.
 import typer
 
 from den import __version__
+from den.commands.auth import auth_app
 from den.commands.hello import hello
 
 app = typer.Typer(
@@ -16,6 +17,7 @@ app = typer.Typer(
 
 # Register commands
 app.command()(hello)
+app.add_typer(auth_app, name="auth")
 
 
 def version_callback(value: bool) -> None:
