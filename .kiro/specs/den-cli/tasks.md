@@ -54,18 +54,18 @@
     - **Validates: Requirements 5.5**
     - Git commit and push after completion
 
-- [-] 3. Implement CLI help and version functionality
+- [x] 3. Implement CLI help and version functionality
   - [x] 3.1 Verify help output includes hello command
     - Ensure `den --help` displays hello command with description
     - Ensure `den hello --help` displays --name option
     - Git commit and push after completion
     - _Requirements: 2.2, 2.3_
-  - [-] 3.2 Write unit tests for help and version output
+  - [x] 3.2 Write unit tests for help and version output
     - Test --help shows available commands
     - Test --version displays version number
     - Test hello --help shows --name option
     - Git commit and push after completion
     - _Requirements: 5.4, 2.4_
 
-- [ ] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
