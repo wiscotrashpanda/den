@@ -15,6 +15,7 @@ from den.auth_storage import (
     save_credential,
     save_credentials,
 )
+from den.commands.auth import validate_api_key
 
 
 # Strategy for generating valid credential keys (non-empty strings without control chars)
@@ -137,3 +138,40 @@ def test_property_credential_read_write_consistency(
             # The value should be exactly what we saved
             assert key in credentials
             assert credentials[key] == value
+
+
+# Strategy for generating non-empty strings (at least one non-whitespace character)
+non_empty_string_strategy = st.text(min_size=1).filter(lambda s: len(s.strip()) > 0)
+
+# Strategy for generating whitespace-only strings
+whitespace_only_strategy = st.text(
+    alphabet=st.sampled_from([" ", "\t", "\n", "\r"]),
+    min_size=0,
+    max_size=20,
+)
+
+
+@settings(max_examples=100)
+@given(api_key=non_empty_string_strategy)
+def test_property_non_empty_api_key_acceptance(api_key: str):
+    """**Feature: auth-login, Property 1: Non-empty API key acceptance**
+
+    *For any* non-empty string provided as an API key, the validation
+    function SHALL accept it as valid input.
+
+    **Validates: Requirements 2.3**
+    """
+    assert validate_api_key(api_key) is True
+
+
+@settings(max_examples=100)
+@given(whitespace=whitespace_only_strategy)
+def test_property_empty_or_whitespace_api_key_rejection(whitespace: str):
+    """Property test for empty/whitespace API key rejection.
+
+    *For any* empty string or whitespace-only string, the validation
+    function SHALL reject it as invalid input.
+
+    This is the inverse property that complements Property 1.
+    """
+    assert validate_api_key(whitespace) is False
