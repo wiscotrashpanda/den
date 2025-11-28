@@ -4,6 +4,8 @@ These tests use Hypothesis to verify universal properties across all inputs
 for the launchctl validator functions.
 """
 
+from pathlib import Path
+
 from hypothesis import given, settings, strategies as st
 
 from den.launchctl_validator import (
@@ -13,6 +15,11 @@ from den.launchctl_validator import (
     validate_minute,
 )
 from den.plist_generator import TaskConfig, generate_plist, parse_plist
+from den.plist_scanner import (
+    scan_domain_agents,
+    extract_task_name,
+    build_plist_filename,
+)
 
 
 # Strategies for generating test data
@@ -301,3 +308,117 @@ def test_property_schedule_configuration_preserved(config: TaskConfig):
         assert parsed_config.start_calendar_hour == config.start_calendar_hour
         assert parsed_config.start_calendar_minute == config.start_calendar_minute
         assert parsed_config.start_interval is None
+
+
+# Strategy for generating plist filenames for scanner tests
+plist_filename_strategy = st.tuples(
+    valid_domain_strategy,
+    valid_task_name_strategy,
+).map(lambda t: f"{t[0]}.{t[1]}.plist")
+
+# Strategy for non-matching filenames (different patterns)
+non_matching_filename_strategy = st.one_of(
+    # Files without .plist extension
+    st.text(
+        alphabet="abcdefghijklmnopqrstuvwxyz0123456789._-", min_size=3, max_size=30
+    ).filter(lambda x: not x.endswith(".plist") and "." in x),
+    # Files with .plist but different domain
+    st.tuples(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789.", min_size=3, max_size=20
+        ).filter(lambda x: not x.startswith(".") and not x.endswith(".")),
+        valid_task_name_strategy,
+    ).map(lambda t: f"{t[0]}.{t[1]}.plist"),
+)
+
+
+@settings(max_examples=100)
+@given(domain=valid_domain_strategy, task_name=valid_task_name_strategy)
+def test_property_filename_format_correctness(domain: str, task_name: str):
+    """**Feature: launchctl-helper, Property 5: Filename Format Correctness**
+
+    *For any* valid domain string and task name, the constructed plist filename
+    should match the pattern {domain}.{task}.plist.
+
+    **Validates: Requirements 2.4**
+    """
+    filename = build_plist_filename(domain, task_name)
+    expected = f"{domain}.{task_name}.plist"
+    assert filename == expected
+
+
+@settings(max_examples=100)
+@given(
+    domain=valid_domain_strategy,
+    matching_tasks=st.lists(
+        valid_task_name_strategy, min_size=0, max_size=5, unique=True
+    ),
+    non_matching_files=st.lists(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789._-", min_size=5, max_size=30
+        ).filter(lambda x: x.endswith(".plist") and x.count(".") >= 1),
+        min_size=0,
+        max_size=5,
+        unique=True,
+    ),
+)
+def test_property_domain_prefix_scanning_correctness(
+    domain: str, matching_tasks: list[str], non_matching_files: list[str]
+):
+    """**Feature: launchctl-helper, Property 6: Domain Prefix Scanning Correctness**
+
+    *For any* set of plist filenames and a domain prefix, the scanner should
+    return exactly those files whose names start with {domain}. and end with .plist.
+
+    **Validates: Requirements 4.1**
+    """
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmppath = Path(tmpdir)
+
+        # Create matching files (domain.task.plist)
+        matching_filenames = set()
+        for task in matching_tasks:
+            filename = f"{domain}.{task}.plist"
+            matching_filenames.add(filename)
+            (tmppath / filename).touch()
+
+        # Create non-matching files (filter out any that accidentally match)
+        for filename in non_matching_files:
+            if not filename.startswith(f"{domain}."):
+                (tmppath / filename).touch()
+
+        # Scan and verify
+        results = scan_domain_agents(domain, agents_dir=tmppath)
+        result_names = {p.name for p in results}
+
+        # All results should be matching files
+        assert result_names == matching_filenames, (
+            f"Expected {matching_filenames}, got {result_names}"
+        )
+
+        # Verify each result starts with domain prefix and ends with .plist
+        for path in results:
+            assert path.name.startswith(f"{domain}."), (
+                f"File {path.name} doesn't start with {domain}."
+            )
+            assert path.name.endswith(".plist"), (
+                f"File {path.name} doesn't end with .plist"
+            )
+
+
+@settings(max_examples=100)
+@given(domain=valid_domain_strategy, task_name=valid_task_name_strategy)
+def test_property_extract_task_name_correctness(domain: str, task_name: str):
+    """**Feature: launchctl-helper, Property 5: Filename Format Correctness (extraction)**
+
+    *For any* valid domain and task name, extracting the task name from a properly
+    formatted plist path should return the original task name.
+
+    **Validates: Requirements 2.4**
+    """
+    filename = f"{domain}.{task_name}.plist"
+    path = Path(f"/some/dir/{filename}")
+    extracted = extract_task_name(path, domain)
+    assert extracted == task_name, f"Expected '{task_name}', got '{extracted}'"
