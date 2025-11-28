@@ -47,17 +47,17 @@ def generate_brewfile() -> str:
     """
     try:
         result = subprocess.run(
-            ["brew", "bundle", "dump", "--force", "--stdout"],
+            ["brew", "bundle", "dump", "--force", "--file=-"],
             capture_output=True,
             text=True,
             check=False,
         )
         if result.returncode != 0:
             raise BrewCommandError(
-                "brew bundle dump --force --stdout", result.returncode, result.stderr
+                "brew bundle dump --force --file=-", result.returncode, result.stderr
             )
         return result.stdout
     except FileNotFoundError as e:
         raise BrewCommandError(
-            "brew bundle dump --force --stdout", -1, "brew command not found"
+            "brew bundle dump --force --file=-", -1, "brew command not found"
         ) from e
