@@ -45,36 +45,20 @@ error() {
 
 info "Checking dependencies..."
 
-# Check for Python 3
-if ! command -v python3 &> /dev/null; then
-    error "Python 3 is required but not installed."
-    error "Please install Python 3 from https://www.python.org/downloads/"
-    exit 1
-fi
-
-PYTHON_VERSION=$(python3 --version 2>&1)
-info "Found $PYTHON_VERSION"
-
-# Check for pip
-if ! python3 -m pip --version &> /dev/null; then
-    error "pip is required but not installed."
-    error "Please install pip: python3 -m ensurepip --upgrade"
-    exit 1
-fi
-
-info "Found pip: $(python3 -m pip --version 2>&1 | head -1)"
-
-# Check for PyInstaller, install if not present
-if ! python3 -m PyInstaller --version &> /dev/null; then
-    warn "PyInstaller not found. Installing..."
-    if ! python3 -m pip install pyinstaller; then
-        error "Failed to install PyInstaller."
-        error "Please install manually: pip install pyinstaller"
+# Check for uv (preferred) or fall back to pip
+if command -v uv &> /dev/null; then
+    info "Found uv: $(uv --version 2>&1)"
+    USE_UV=true
+else
+    USE_UV=false
+    # Check for Python 3
+    if ! command -v python3 &> /dev/null; then
+        error "Python 3 is required but not installed."
+        error "Please install Python 3 from https://www.python.org/downloads/"
         exit 1
     fi
-    info "PyInstaller installed successfully."
-else
-    info "Found PyInstaller: $(python3 -m PyInstaller --version 2>&1)"
+    PYTHON_VERSION=$(python3 --version 2>&1)
+    info "Found $PYTHON_VERSION"
 fi
 
 # Check for spec file
@@ -84,6 +68,40 @@ if [ ! -f "den.spec" ]; then
     exit 1
 fi
 
+# Ensure virtual environment and dependencies are set up
+if [ "$USE_UV" = true ]; then
+    info "Syncing dependencies with uv..."
+    if ! uv sync --extra dev; then
+        error "Failed to sync dependencies with uv."
+        exit 1
+    fi
+    PYTHON_CMD=".venv/bin/python"
+    PYINSTALLER_CMD=".venv/bin/pyinstaller"
+else
+    # Fall back to system Python with venv
+    if [ ! -d ".venv" ]; then
+        info "Creating virtual environment..."
+        python3 -m venv .venv
+    fi
+    PYTHON_CMD=".venv/bin/python"
+    PYINSTALLER_CMD=".venv/bin/pyinstaller"
+    
+    # Install dependencies
+    info "Installing dependencies..."
+    if ! $PYTHON_CMD -m pip install -e ".[dev]" -q; then
+        error "Failed to install dependencies."
+        exit 1
+    fi
+fi
+
+# Verify PyInstaller is available
+if [ ! -f "$PYINSTALLER_CMD" ]; then
+    error "PyInstaller not found at $PYINSTALLER_CMD"
+    error "Please ensure dev dependencies are installed."
+    exit 1
+fi
+
+info "Found PyInstaller: $($PYINSTALLER_CMD --version 2>&1)"
 info "All dependencies satisfied."
 echo ""
 
@@ -104,8 +122,8 @@ if [ -d "build" ]; then
     rm -rf build
 fi
 
-# Run PyInstaller
-if ! python3 -m PyInstaller den.spec; then
+# Run PyInstaller using the virtual environment
+if ! $PYINSTALLER_CMD den.spec; then
     error "PyInstaller build failed."
     error "Check the output above for details."
     exit 2

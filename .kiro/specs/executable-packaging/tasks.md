@@ -1,0 +1,63 @@
+# Implementation Plan
+
+- [x] 1. Create PyInstaller entry point and spec file
+  - [x] 1.1 Create entry point script for PyInstaller
+    - Create `src/den/__main__.py` that invokes the Typer app
+    - This allows PyInstaller to bundle the application correctly
+    - _Requirements: 1.1, 3.2_
+  - [x] 1.2 Create PyInstaller spec file
+    - Create `den.spec` in the project root
+    - Configure for single-file executable output
+    - Include hidden imports for typer, anthropic, httpx
+    - Set output name to "den"
+    - _Requirements: 1.1, 1.2, 3.1, 3.3_
+  - [x] 1.3 Commit and push changes
+    - Commit all changes with message "Add PyInstaller entry point and spec file"
+    - Push to remote repository
+
+- [x] 2. Create installation script
+  - [x] 2.1 Create install.sh with dependency checks
+    - Create `install.sh` in the project root
+    - Add checks for Python 3 and pip availability
+    - Install PyInstaller if not present
+    - _Requirements: 2.1, 2.5_
+  - [x] 2.2 Add build and installation logic
+    - Run PyInstaller with the spec file
+    - Create `~/Local` directory if it doesn't exist
+    - Copy executable to `~/Local/den`
+    - Create symbolic link from `/usr/local/bin/den` to `~/Local/den` using sudo
+    - Add verification step to confirm installation
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [x] 2.3 Add error handling and user feedback
+    - Add descriptive error messages for each failure mode
+    - Set appropriate exit codes (0=success, 1=deps, 2=build, 3=install)
+    - Add progress messages during build and installation
+    - _Requirements: 2.5_
+  - [x] 2.4 Commit and push changes
+    - Commit all changes with message "Add installation script for executable deployment"
+    - Push to remote repository
+
+- [x] 3. Update project configuration
+  - [x] 3.1 Add PyInstaller to dev dependencies
+    - Update `pyproject.toml` to include PyInstaller in dev dependencies
+    - _Requirements: 3.1, 3.3_
+  - [x] 3.2 Commit and push changes
+    - Commit all changes with message "Add PyInstaller to dev dependencies"
+    - Push to remote repository
+
+- [x] 4. Final verification
+  - [x] 4.1 Test the complete installation workflow
+    - Run `./install.sh` and verify successful completion
+    - Verify `den --version` works from any directory
+    - Verify `den hello` command functions correctly
+    - _Requirements: 1.3, 1.4, 2.4_
+
+- [x] 5. Update documentation
+  - [x] 5.1 Update README with installation instructions
+    - Add section documenting how to build and install the executable
+    - Include prerequisites (Python 3, pip)
+    - Document the `./install.sh` usage
+    - Explain the installation locations (`~/Local/den` and `/usr/local/bin/den`)
+  - [x] 5.2 Commit and push changes
+    - Commit all changes with message "Update README with executable installation instructions"
+    - Push to remote repository
