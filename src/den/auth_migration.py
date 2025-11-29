@@ -59,7 +59,7 @@ def migrate_from_json(backend: KeychainBackend | None = None) -> bool:
 
         if not isinstance(credentials, dict):
             logger.warning(
-                f"Invalid auth.json format (not a dictionary), skipping migration"
+                "Invalid auth.json format (not a dictionary), skipping migration"
             )
             return False
 

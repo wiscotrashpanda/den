@@ -5,9 +5,10 @@ implementations for production (macOS Keychain) and testing (in-memory).
 """
 
 import json
-from typing import Protocol
+from typing import Protocol, NoReturn
 
 import keyring
+from keyring import errors
 
 
 class KeychainAccessError(Exception):
@@ -135,6 +136,28 @@ class MacOSKeychainBackend:
         """Initialize the macOS Keychain backend."""
         pass
 
+    def _raise_enhanced_error(self, e: errors.KeyringError, operation: str) -> NoReturn:
+        """Raise a KeychainAccessError with enhanced context for common errors.
+
+        Args:
+            e: The original KeyringError.
+            operation: Description of the operation (e.g., "store credential").
+        """
+        msg = str(e)
+        if "-25244" in msg:
+            raise KeychainAccessError(
+                "Keychain access denied (errSecInvalidOwnerEdit). "
+                "This usually happens when the application is rebuilt with a different signature. "
+                "Please manually delete the 'den-cli' items from your Keychain using 'Keychain Access.app' "
+                "or run: security delete-generic-password -l den-cli",
+                original_error=e,
+            ) from e
+
+        raise KeychainAccessError(
+            f"Failed to {operation} in Keychain: {e}",
+            original_error=e,
+        ) from e
+
     def get_credential(self, key: str) -> str | None:
         """Retrieve a credential from the Keychain.
 
@@ -149,11 +172,8 @@ class MacOSKeychainBackend:
         """
         try:
             return keyring.get_password(self.SERVICE_NAME, key)
-        except keyring.errors.KeyringError as e:
-            raise KeychainAccessError(
-                f"Failed to retrieve credential from Keychain: {e}",
-                original_error=e,
-            ) from e
+        except errors.KeyringError as e:
+            self._raise_enhanced_error(e, "retrieve credential")
 
     def set_credential(self, key: str, value: str) -> None:
         """Store a credential in the Keychain.
@@ -171,11 +191,8 @@ class MacOSKeychainBackend:
         try:
             keyring.set_password(self.SERVICE_NAME, key, value)
             self._update_registry(key, add=True)
-        except keyring.errors.KeyringError as e:
-            raise KeychainAccessError(
-                f"Failed to store credential in Keychain: {e}",
-                original_error=e,
-            ) from e
+        except errors.KeyringError as e:
+            self._raise_enhanced_error(e, "store credential")
 
     def delete_credential(self, key: str) -> None:
         """Remove a credential from the Keychain.
@@ -189,14 +206,11 @@ class MacOSKeychainBackend:
         try:
             keyring.delete_password(self.SERVICE_NAME, key)
             self._update_registry(key, add=False)
-        except keyring.errors.PasswordDeleteError:
+        except errors.PasswordDeleteError:
             # Credential doesn't exist - this is not an error
             pass
-        except keyring.errors.KeyringError as e:
-            raise KeychainAccessError(
-                f"Failed to delete credential from Keychain: {e}",
-                original_error=e,
-            ) from e
+        except errors.KeyringError as e:
+            self._raise_enhanced_error(e, "delete credential")
 
     def list_credentials(self) -> list[str]:
         """List all credentials for den-cli service.
@@ -217,11 +231,8 @@ class MacOSKeychainBackend:
                 f"Failed to parse credential registry: {e}",
                 original_error=e,
             ) from e
-        except keyring.errors.KeyringError as e:
-            raise KeychainAccessError(
-                f"Failed to list credentials from Keychain: {e}",
-                original_error=e,
-            ) from e
+        except errors.KeyringError as e:
+            self._raise_enhanced_error(e, "list credentials")
 
     def _update_registry(self, key: str, add: bool) -> None:
         """Update the credential registry.
@@ -244,8 +255,5 @@ class MacOSKeychainBackend:
             # Store updated registry
             registry_json = json.dumps(sorted(current_keys))
             keyring.set_password(self.SERVICE_NAME, self.REGISTRY_KEY, registry_json)
-        except keyring.errors.KeyringError as e:
-            raise KeychainAccessError(
-                f"Failed to update credential registry: {e}",
-                original_error=e,
-            ) from e
+        except errors.KeyringError as e:
+            self._raise_enhanced_error(e, "update credential registry")

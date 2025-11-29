@@ -351,7 +351,7 @@ def test_property_filename_format_correctness(domain: str, task_name: str):
 @given(
     domain=valid_domain_strategy,
     matching_tasks=st.lists(
-        valid_task_name_strategy, min_size=0, max_size=5, unique=True
+        valid_task_name_strategy, min_size=0, max_size=5, unique_by=lambda x: x.lower()
     ),
     non_matching_files=st.lists(
         st.text(

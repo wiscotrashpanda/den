@@ -24,16 +24,23 @@ class TestRunBrewUpgrade:
         mock_result.stdout = "Updated packages"
         mock_result.stderr = ""
 
-        with patch(
-            "den.brew_runner.subprocess.run", return_value=mock_result
-        ) as mock_run:
+        with (
+            patch(
+                "den.brew_runner.subprocess.run", return_value=mock_result
+            ) as mock_run,
+            patch(
+                "den.brew_runner._get_brew_context",
+                return_value=("/resolved/brew", {"PATH": "/resolved"}),
+            ),
+        ):
             run_brew_upgrade()
 
             mock_run.assert_called_once_with(
-                ["brew", "upgrade"],
+                ["/resolved/brew", "upgrade"],
                 capture_output=True,
                 text=True,
                 check=False,
+                env={"PATH": "/resolved"},
             )
 
     def test_upgrade_failure_raises_error(self) -> None:
@@ -42,7 +49,13 @@ class TestRunBrewUpgrade:
         mock_result.returncode = 1
         mock_result.stderr = "Error: some packages failed"
 
-        with patch("den.brew_runner.subprocess.run", return_value=mock_result):
+        with (
+            patch("den.brew_runner.subprocess.run", return_value=mock_result),
+            patch(
+                "den.brew_runner._get_brew_context",
+                return_value=("/resolved/brew", {"PATH": "/resolved"}),
+            ),
+        ):
             with pytest.raises(BrewCommandError) as exc_info:
                 run_brew_upgrade()
 
@@ -52,9 +65,15 @@ class TestRunBrewUpgrade:
 
     def test_brew_not_found_raises_error(self) -> None:
         """Test that missing brew command raises BrewCommandError."""
-        with patch(
-            "den.brew_runner.subprocess.run",
-            side_effect=FileNotFoundError("brew not found"),
+        with (
+            patch(
+                "den.brew_runner.subprocess.run",
+                side_effect=FileNotFoundError("brew not found"),
+            ),
+            patch(
+                "den.brew_runner._get_brew_context",
+                return_value=("/resolved/brew", {"PATH": "/resolved"}),
+            ),
         ):
             with pytest.raises(BrewCommandError) as exc_info:
                 run_brew_upgrade()
@@ -75,17 +94,24 @@ class TestGenerateBrewfile:
         mock_result.stdout = expected_content
         mock_result.stderr = ""
 
-        with patch(
-            "den.brew_runner.subprocess.run", return_value=mock_result
-        ) as mock_run:
+        with (
+            patch(
+                "den.brew_runner.subprocess.run", return_value=mock_result
+            ) as mock_run,
+            patch(
+                "den.brew_runner._get_brew_context",
+                return_value=("/resolved/brew", {"PATH": "/resolved"}),
+            ),
+        ):
             result = generate_brewfile()
 
             assert result == expected_content
             mock_run.assert_called_once_with(
-                ["brew", "bundle", "dump", "--force", "--file=-"],
+                ["/resolved/brew", "bundle", "dump", "--force", "--file=-"],
                 capture_output=True,
                 text=True,
                 check=False,
+                env={"PATH": "/resolved"},
             )
 
     def test_brewfile_generation_failure_raises_error(self) -> None:
@@ -94,7 +120,13 @@ class TestGenerateBrewfile:
         mock_result.returncode = 1
         mock_result.stderr = "Error: bundle command failed"
 
-        with patch("den.brew_runner.subprocess.run", return_value=mock_result):
+        with (
+            patch("den.brew_runner.subprocess.run", return_value=mock_result),
+            patch(
+                "den.brew_runner._get_brew_context",
+                return_value=("/resolved/brew", {"PATH": "/resolved"}),
+            ),
+        ):
             with pytest.raises(BrewCommandError) as exc_info:
                 generate_brewfile()
 
@@ -104,9 +136,15 @@ class TestGenerateBrewfile:
 
     def test_brew_not_found_raises_error(self) -> None:
         """Test that missing brew command raises BrewCommandError."""
-        with patch(
-            "den.brew_runner.subprocess.run",
-            side_effect=FileNotFoundError("brew not found"),
+        with (
+            patch(
+                "den.brew_runner.subprocess.run",
+                side_effect=FileNotFoundError("brew not found"),
+            ),
+            patch(
+                "den.brew_runner._get_brew_context",
+                return_value=("/resolved/brew", {"PATH": "/resolved"}),
+            ),
         ):
             with pytest.raises(BrewCommandError) as exc_info:
                 generate_brewfile()
