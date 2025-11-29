@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A CLI utility for local machine automations"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["typer>=0.9.0", "anthropic>=0.18.0", "httpx>=0.27.0"]
+dependencies = ["typer>=0.9.0", "anthropic>=0.18.0", "httpx>=0.27.0", "keyring>=24.0.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0.0", "hypothesis>=6.0.0", "pyinstaller>=6.0.0"]
