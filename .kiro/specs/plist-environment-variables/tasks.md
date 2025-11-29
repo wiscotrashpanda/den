@@ -26,19 +26,19 @@
 - [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Update launchctl install command to capture PATH
+- [x] 5. Update launchctl install command to capture PATH
   - Import `os` module
   - Capture `os.environ.get("PATH")` before creating TaskConfig
   - Create environment_variables dict with PATH if available
   - Pass environment_variables to TaskConfig constructor
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 6. Write unit tests for environment variable handling
+- [x] 6. Write unit tests for environment variable handling
   - Test generate_plist with environment variables present
   - Test generate_plist with environment variables absent
   - Test parse_plist with EnvironmentVariables key present
   - Test parse_plist with EnvironmentVariables key absent
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 7. Final Checkpoint - Ensure all tests pass
+- [x] 7. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.

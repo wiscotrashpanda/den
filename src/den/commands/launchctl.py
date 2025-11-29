@@ -5,6 +5,7 @@ macOS LaunchAgent plist files through an interactive experience.
 """
 
 import shlex
+import os
 
 import typer
 
@@ -164,6 +165,10 @@ def install() -> None:
     label = f"{domain}.{task_name}"
     program_arguments = shlex.split(command)
 
+    # Capture PATH environment variable
+    env_path = os.environ.get("PATH")
+    environment_variables = {"PATH": env_path} if env_path else None
+
     config = TaskConfig(
         label=label,
         program_arguments=program_arguments,
@@ -171,6 +176,7 @@ def install() -> None:
         start_calendar_hour=start_calendar_hour,
         start_calendar_minute=start_calendar_minute,
         run_at_load=True,
+        environment_variables=environment_variables,
     )
 
     # Generate plist content
