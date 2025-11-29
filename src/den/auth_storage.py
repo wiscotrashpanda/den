@@ -3,12 +3,46 @@
 This module handles reading and writing credentials using a backend abstraction.
 By default, credentials are stored in macOS Keychain, but the backend can be
 injected for testing purposes.
+
+On module initialization, credentials are automatically migrated from the legacy
+auth.json file to Keychain if the file exists.
 """
+
+import logging
 
 from den.keychain_backend import KeychainBackend, MacOSKeychainBackend
 
+logger = logging.getLogger(__name__)
+
 # Global backend instance - defaults to MacOSKeychainBackend
 _backend: KeychainBackend = MacOSKeychainBackend()
+
+# Run migration on module import
+_migration_attempted = False
+
+
+def _run_migration_once() -> None:
+    """Run migration from auth.json to Keychain once per session.
+
+    This function is called automatically when the module is imported.
+    Migration failures are logged but don't prevent module loading.
+    """
+    global _migration_attempted
+    if _migration_attempted:
+        return
+
+    _migration_attempted = True
+
+    try:
+        from den.auth_migration import migrate_from_json
+
+        migrate_from_json(_backend)
+    except Exception as e:
+        logger.warning(f"Failed to migrate credentials from auth.json: {e}")
+
+
+# Attempt migration when module loads
+_run_migration_once()
 
 
 def set_backend(backend: KeychainBackend) -> None:

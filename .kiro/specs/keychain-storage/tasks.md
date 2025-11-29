@@ -58,14 +58,14 @@
     - **Property 5: Migration Preserves Existing Keychain Credentials**
     - **Validates: Requirements 4.4**
 
-- [ ] 7. Integrate migration into application startup
-  - [ ] 7.1 Add migration call to auth_storage initialization
+- [x] 7. Integrate migration into application startup
+  - [x] 7.1 Add migration call to auth_storage initialization
     - Call `migrate_from_json()` when module loads
     - Handle migration errors gracefully with logging
     - _Requirements: 4.1, 4.3_
 
-- [ ] 8. Update existing tests
-  - [ ] 8.1 Update test_auth_storage.py to use InMemoryBackend
+- [x] 8. Update existing tests
+  - [x] 8.1 Update test_auth_storage.py to use InMemoryBackend
     - Inject InMemoryBackend in test setup
     - Ensure existing tests pass with new implementation
     - _Requirements: 5.1, 5.2_
