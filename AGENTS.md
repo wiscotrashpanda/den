@@ -1,6 +1,7 @@
 # den Codebase Guide for Agents
 
 ## Build, Lint, & Test
+- **Install:** `pip install -e ".[dev]"` to install with dev dependencies.
 - **Test:** Run all tests with `pytest`.
 - **Single Test:** `pytest tests/test_hello.py::test_hello_default_output`
 - **Lint:** Follow standard Python PEP 8. Type hints are required (mypy compatible).
