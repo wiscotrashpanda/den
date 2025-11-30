@@ -7,13 +7,13 @@ import typer
 
 
 def hello(
-    name: str = typer.Option("World", "--name", "-n", help="Name to greet"),
+  name: str = typer.Option("World", "--name", "-n", help="Name to greet"),
 ) -> None:
-    """Say hello to someone.
+  """Say hello to someone.
 
-    Outputs a greeting message to the console in the format "Hello, {name}!".
+  Outputs a greeting message to the console in the format "Hello, {name}!".
 
-    Args:
-        name: The name to include in the greeting. Defaults to "World".
-    """
-    typer.echo(f"Hello, {name}!")
+  Args:
+    name: The name to include in the greeting. Defaults to "World".
+  """
+  typer.echo(f"Hello, {name}!")

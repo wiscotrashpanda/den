@@ -12,9 +12,9 @@ from den.commands.hello import hello
 from den.commands.launchctl import launchctl_app
 
 app = typer.Typer(
-    name="den",
-    help="A CLI utility for local machine automations.",
-    add_completion=False,
+  name="den",
+  help="A CLI utility for local machine automations.",
+  add_completion=False,
 )
 
 # Register commands
@@ -25,26 +25,26 @@ app.add_typer(launchctl_app, name="launchctl")
 
 
 def version_callback(value: bool) -> None:
-    """Display the application version and exit.
+  """Display the application version and exit.
 
-    Args:
-        value: If True, print version and raise Exit.
-    """
-    if value:
-        typer.echo(f"den version {__version__}")
-        raise typer.Exit()
+  Args:
+    value: If True, print version and raise Exit.
+  """
+  if value:
+    typer.echo(f"den version {__version__}")
+    raise typer.Exit()
 
 
 @app.callback()
 def main(
-    version: bool = typer.Option(
-        False,
-        "--version",
-        "-v",
-        help="Show the application version and exit.",
-        callback=version_callback,
-        is_eager=True,
-    ),
+  version: bool = typer.Option(
+    False,
+    "--version",
+    "-v",
+    help="Show the application version and exit.",
+    callback=version_callback,
+    is_eager=True,
+  ),
 ) -> None:
-    """den - A CLI utility for local machine automations."""
-    pass
+  """den - A CLI utility for local machine automations."""
+  pass

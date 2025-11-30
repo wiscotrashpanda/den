@@ -7,4 +7,4 @@ and serves as the entry point for PyInstaller bundling.
 from den.main import app
 
 if __name__ == "__main__":
-    app()
+  app()

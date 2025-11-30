@@ -8,21 +8,21 @@ import anthropic
 
 
 class BrewfileFormatterError(Exception):
-    """Exception raised for Brewfile formatting errors."""
+  """Exception raised for Brewfile formatting errors."""
 
-    pass
+  pass
 
 
 def build_formatting_prompt(raw_content: str) -> str:
-    """Build the prompt for Anthropic API to format a Brewfile.
+  """Build the prompt for Anthropic API to format a Brewfile.
 
-    Args:
-        raw_content: The raw Brewfile content from brew bundle dump.
+  Args:
+    raw_content: The raw Brewfile content from brew bundle dump.
 
-    Returns:
-        The formatted prompt string for the Anthropic API.
-    """
-    return f"""Format the following Brewfile with these requirements:
+  Returns:
+    The formatted prompt string for the Anthropic API.
+  """
+  return f"""Format the following Brewfile with these requirements:
 
 1. Add a header block at the top with:
    - "# Homebrew Brewfile"
@@ -36,8 +36,8 @@ def build_formatting_prompt(raw_content: str) -> str:
    # ============================================
 
 3. Add inline description comments at the END of each package line (not above), using this format:
-   brew "package-name"                    # Brief description of what it does
-   cask "app-name"                        # Brief description of what it does
+   brew "package-name"          # Brief description of what it does
+   cask "app-name"            # Brief description of what it does
    
    Align the comments for readability within each section.
 
@@ -72,36 +72,36 @@ Raw Brewfile:
 
 
 def format_brewfile(raw_content: str, api_key: str) -> str:
-    """Send Brewfile to Anthropic for formatting with descriptions.
+  """Send Brewfile to Anthropic for formatting with descriptions.
 
-    Args:
-        raw_content: The raw Brewfile content from brew bundle dump.
-        api_key: Anthropic API key for authentication.
+  Args:
+    raw_content: The raw Brewfile content from brew bundle dump.
+    api_key: Anthropic API key for authentication.
 
-    Returns:
-        The formatted Brewfile content with descriptions and categories.
+  Returns:
+    The formatted Brewfile content with descriptions and categories.
 
-    Raises:
-        BrewfileFormatterError: If the API call fails.
-    """
-    prompt = build_formatting_prompt(raw_content)
+  Raises:
+    BrewfileFormatterError: If the API call fails.
+  """
+  prompt = build_formatting_prompt(raw_content)
 
-    try:
-        client = anthropic.Anthropic(api_key=api_key)
-        message = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        # Extract text content from the response
-        if message.content and len(message.content) > 0:
-            return message.content[0].text
-        raise BrewfileFormatterError("Empty response from Anthropic API")
-    except anthropic.APIConnectionError as e:
-        raise BrewfileFormatterError(f"Failed to connect to Anthropic API: {e}") from e
-    except anthropic.RateLimitError as e:
-        raise BrewfileFormatterError(f"Anthropic API rate limit exceeded: {e}") from e
-    except anthropic.APIStatusError as e:
-        raise BrewfileFormatterError(
-            f"Anthropic API error: {e.status_code} - {e.message}"
-        ) from e
+  try:
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+      model="claude-sonnet-4-20250514",
+      max_tokens=4096,
+      messages=[{"role": "user", "content": prompt}],
+    )
+    # Extract text content from the response
+    if message.content and len(message.content) > 0:
+      return message.content[0].text
+    raise BrewfileFormatterError("Empty response from Anthropic API")
+  except anthropic.APIConnectionError as e:
+    raise BrewfileFormatterError(f"Failed to connect to Anthropic API: {e}") from e
+  except anthropic.RateLimitError as e:
+    raise BrewfileFormatterError(f"Anthropic API rate limit exceeded: {e}") from e
+  except anthropic.APIStatusError as e:
+    raise BrewfileFormatterError(
+      f"Anthropic API error: {e.status_code} - {e.message}"
+    ) from e
