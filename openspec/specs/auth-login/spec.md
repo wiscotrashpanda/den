@@ -1,5 +1,6 @@
 # Auth Login
 
+## Purpose
 The `den auth login` command provides authentication functionality for the den CLI application. This feature allows users to configure API credentials for external services, starting with Anthropic. Credentials are stored in a JSON configuration file at `~/.config/den/auth.json`, designed to support multiple authentication providers as the application evolves.
 
 ## Requirements

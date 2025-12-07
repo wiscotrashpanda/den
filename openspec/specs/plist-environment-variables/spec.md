@@ -1,5 +1,6 @@
 # Plist Environment Variables
 
+## Purpose
 This feature adds environment variable support to the LaunchAgent plist generator within the `den` CLI application. LaunchAgents run in a minimal environment without the user's shell PATH, causing commands like `brew` to fail when executed as scheduled tasks. This feature enables users to configure environment variables (particularly PATH) in generated plist files, ensuring scheduled commands can locate required executables.
 
 ## Requirements

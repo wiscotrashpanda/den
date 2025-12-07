@@ -1,5 +1,6 @@
 # Executable Packaging
 
+## Purpose
 This feature enables the den CLI application to be packaged as a standalone executable binary and installed to `/usr/local/bin/den` on macOS. The packaging process bundles the Python application and all its dependencies into a single executable file that can run without requiring a Python installation on the target system.
 
 ## Requirements

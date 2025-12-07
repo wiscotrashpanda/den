@@ -1,5 +1,6 @@
 # LaunchCtl Helper
 
+## Purpose
 This feature provides a LaunchCtl helper command within the `den` CLI application. The feature simplifies the creation and management of macOS LaunchAgent plist files, providing an interactive experience for users to define scheduled background tasks without manually writing XML plist files. The generated files are stored in the standard `~/Library/LaunchAgents/` directory.
 
 ## Requirements

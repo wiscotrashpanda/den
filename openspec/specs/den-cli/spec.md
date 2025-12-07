@@ -1,5 +1,6 @@
 # Den CLI
 
+## Purpose
 The `den` CLI application is a command-line utility built with Python using the Typer framework. Named after a raccoon's den, this tool serves as a foundation for local machine automations. The initial implementation establishes the project structure with modern Python tooling (uv package manager, pyproject.toml configuration) and includes a "Hello World" command to verify functionality.
 
 ## Requirements

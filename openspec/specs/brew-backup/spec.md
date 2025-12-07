@@ -1,5 +1,6 @@
 # Brew Backup
 
+## Purpose
 The `den brew upgrade` command provides automated Homebrew maintenance and backup functionality for the den CLI application. This feature runs `brew upgrade` to update all installed packages, generates a Brewfile snapshot, uses Anthropic's API to document and categorize the Brewfile contents, and backs up the formatted Brewfile to a GitHub Gist. The system tracks changes via content hashing to avoid unnecessary API calls and Gist updates when the Brewfile hasn't changed.
 
 ## Requirements
