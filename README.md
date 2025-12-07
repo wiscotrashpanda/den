@@ -6,6 +6,7 @@ A CLI utility for local machine automations, built with Python and Typer.
 
 - **Homebrew Management**: Upgrade packages and automatically backup your Brewfile to GitHub Gist
 - **LaunchAgent Management**: Create and manage macOS LaunchAgents through an interactive CLI
+- **Repository Management**: Create GitHub repositories and clone them locally in one step
 - **AI-Powered Formatting**: Uses Anthropic's Claude to format and organize your Brewfile
 - **Secure Credential Storage**: Safely store API keys for Anthropic and GitHub
 - **Change Detection**: Only backs up when your Brewfile changes (with force override option)
@@ -130,9 +131,39 @@ Set your domain in `~/.config/den/config.json`:
 
 Default domain is `com.example` if not configured.
 
-### Hello Command
+### Repository Management
 
-A simple greeting command:
+Create a new GitHub repository and clone it to your local machine:
+
+```bash
+# Create and clone a repository in your default organization
+den repo create my-project
+
+# Create and clone in a specific organization
+den repo create my-project --org my-org
+```
+
+This command:
+1. Checks if the repository already exists on GitHub
+2. Checks if the local directory (`~/Code/<name>`) already exists
+3. Creates the repository on GitHub (public by default)
+4. Clones the repository to `~/Code/<name>`
+
+#### Configuration
+
+Set a default organization in `~/.config/den/config.json`:
+
+```json
+{
+  "repo": {
+    "default_org": "my-org"
+  }
+}
+```
+
+### Hello Commands
+
+Simple greeting commands:
 
 ```bash
 # Default greeting
@@ -142,6 +173,10 @@ den hello
 # Custom name
 den hello --name Alice
 # Output: Hello, Alice!
+
+# Hello again
+den hello-again --name Bob
+# Output: Hello again, Bob!
 ```
 
 ### Help
@@ -154,6 +189,7 @@ den --help
 den auth --help
 den brew --help
 den launchctl --help
+den repo --help
 
 # Show version
 den --version
@@ -211,11 +247,14 @@ den/
 │   ├── launchctl_validator.py # Input validation
 │   ├── plist_generator.py     # Plist file generation
 │   ├── plist_scanner.py       # LaunchAgent discovery
+│   ├── repo_client.py         # GitHub repository API client
+│   ├── repo_config.py         # Repository configuration
 │   └── commands/
 │       ├── auth.py            # Auth commands
 │       ├── brew.py            # Brew commands
 │       ├── hello.py           # Hello command
-│       └── launchctl.py       # LaunchAgent commands
+│       ├── launchctl.py       # LaunchAgent commands
+│       └── repo.py            # Repository commands
 ├── tests/
 ├── pyproject.toml
 └── README.md
