@@ -1,0 +1,22 @@
+{
+  "name": "denctl Codespace",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "VARIANT": "ubuntu"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": ".devcontainer/scripts/install-opencode.sh",
+  "features": {},
+  "forwardPorts": [],
+  "mounts": [],
+  "shutdownAction": "stopCompose"
+}
